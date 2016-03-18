@@ -46,7 +46,7 @@ for code in codes:
     dicoDfCodePostaux[code] = df.loc[df['code_postal']==code]
 
 dfStat = pd.DataFrame({'code_postal':codes,'nb_accident':[len(d) for d in dicoDfCodePostaux.values()]})
-
+dfStat['arrondissement'] = dfStat.apply(lambda row: int(str(row['code_postal'])[-2:]),axis=1)
 #dataframe avec avec code postaux et accidents
 print dfStat
 
