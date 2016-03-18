@@ -62,6 +62,7 @@ for col in df['Type_de_vehicule']:
     dfStat[col] = l
     #dfStat[col] = len(grouped.groups.get(('7')))
 
+
 #dataframe avec avec code postaux et accidents
 print dfStat
 
