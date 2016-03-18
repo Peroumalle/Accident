@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.feature {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+</style>
+<body>
+<link rel="stylesheet" href="projetD3.css">
+<script src="./d3.v3.min.js" charset="utf-8"></script>
+<script src="./queue.v1.min.js"></script>
+<script>
+var margin = 20
+var width  = 800 
+var height = 600
+
+var svg = d3.select("body").append("svg").attr("width",width).attr("height",height)
+// echelle pour les cercles
+var scalecircle = d3.scale.sqrt().range([0, 40]).domain([0,30])
+
+// echelle de couleur aussi facile
+var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,30])
+
+// projection !
+
+var projection = d3.geo.azimuthalEqualArea()
+                      .translate([width/2, height/2])
+          .center([16,50])
+                      .scale([1000]);
+
+
+var path = d3.geo.path().projection(projection)
+
+
+
+var Data = []
+
+
+
+queue()
+   .defer(d3.json, './europe.json') // topojson polygons
+   .defer(d3.csv, './datatxchom.csv') // geojson points
+   .await(function(error,features,data){
+
+  // suppression des cercle et utilisation des polygone + couleur choroplète
+
+  // creation d'une table inverse Pays -> variables via d3.nest
+  var dlookup= d3.nest().key(function(d){return d.Country}).rollup(function(d){
+    return d[0]}).map(data)
+
+  // enrichissement des données geojson pour y ajouter les taux de chomages
+  // console.log(dlookup)
+  features.features.forEach(function(c){
+    console.log(dlookup[c.properties.admin]);
+    c.properties.choms = dlookup[c.properties.admin]
+  })
+  console.log(features.features)
+
+  // dessin des pays et coloration
+  var country = svg.selectAll("path").data(features.features)
+  country.enter().append("path")
+    .attr("d",path)
+    .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.X2014M01) : "#ddd"})
+    .on("mouseover",function(d){console.log(d)})
+  
+  Data = data
+
+  // ajout du title et des labels
+  country.append("title").html(function(d){return d.properties.choms ? d.properties.choms.Country + " : " + d.properties.choms.X2013M01 + "%" : d.properties.name})
+  
+  var labels = svg.selectAll("text").data(data)
+  labels.enter().append("text")
+    .attr("x",function(d){var p = projection([+d.Longitude,+d.Latitude]); return p[0]})
+    .attr("y",function(d){var p = projection([+d.Longitude,+d.Latitude]); return p[1]})
+    .html(function(d){return d.Country})
+    .style("text")
+  
+})
+
+
+var update = function(feature){
+  var country = svg.selectAll("path")
+  // d3.rgb("#ag4444").darker()
+  country.transition().duration(2000).ease(d3.ease("quad"))
+    .style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return scalecolor(d.properties.choms[feature]) }else{return "#ddd"}})
+  
+  country.selectAll("title").html(function(d){return d.properties.choms ? d.properties.choms.Country + " : " + d.properties.choms.X2013M01 + "%" : d.properties.name})
+  
+
+}
+</script>
+</body>

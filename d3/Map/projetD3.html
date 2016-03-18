@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+svg {
+    background: white;
+}
+
+.region {
+  stroke: white;
+  stroke-width: 2px;
+  fill: #EFEFEF;
+}
+.graticule {
+  fill: none;
+  stroke-width: 1px;
+  stroke: gray;
+  vector-effect: non-scaling-stroke;
+}
+
+.water {
+  fill: #BEDDF5;
+}
+.feature {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+</style>
+<body>
+<script src="./d3.v3.min.js" charset="utf-8"></script>
+<script src="./queue.v1.min.js"></script>
+<script>
+var width = 800,
+height = 600;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// echelle de couleur aussi facile
+var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,2000])
+
+
+var projection = d3.geo.azimuthalEqualArea()
+  .translate([width/2, height/2])
+  .center([16,50])
+  .scale([1000]);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var Data = [];
+
+    queue()
+      .defer(d3.json, './paris.json') // topojson polygons
+      .defer(d3.csv, './dataArrondissementForD3js.csv') // geojson points
+      .await(function(error,features,data) {
+
+  var dlookup= d3.nest().key(function(d){return d.arrondissement}).rollup(function(d){
+    return d[0]}).map(data)
+
+    features.features.forEach(function(c){
+          console.log(dlookup[c.properties.Name]);
+          c.properties.choms = dlookup[c.properties.Name];
+        }
+      );
+  console.log(features.features)
+
+    projection
+      .scale(1)
+      .translate([0, 0]);
+
+      var b = path.bounds(features),
+  s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+  t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+  projection
+  .scale(s)
+  .translate(t);
+
+  var dep = svg.selectAll("path")
+    .data(features.features)
+    .enter().append("svg:path")
+    .attr("class", "feature")
+    .attr("d", path)
+    .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.nb_accident) : "#ddd"})
+    .on("mouseover",function(d){console.log(d)});
+});
+d3.select(self.frameElement).style("height", height + "px");
+</script>
+</body>

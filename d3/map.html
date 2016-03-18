@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.feature {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+rect.barGreen {
+  fill: green;
+}
+
+rect.bar {
+  fill: orange;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 960,
+    height = 500,
+    active;
+
+var projection = d3.geo.mercator();
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var g = svg.append("g");
+
+d3.json("paris.json", function(error, us) {
+
+  projection
+  .scale(1)
+  .translate([0, 0]);
+
+  var b = path.bounds(us),
+  s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+  t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+  projection
+  .scale(s)
+  .translate(t);
+
+  g.selectAll("path")
+  .data(us.features)
+  .enter().append("svg:path")
+  .attr("class", "feature")
+  .attr("d", path)
+  .on("click", click);
+});
+
+function click(d) {
+  if (active === d) return reset();
+  g.selectAll(".active").classed("active", false);
+  d3.select(this).classed("active", active = d);
+
+  var b = path.bounds(d),
+      s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+      t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+  var transform = 
+  // "translate(" + projection.translate() + ")"  +
+  "scale(" + .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height) + ")"
+  +
+  "translate(" + -(b[1][0] + b[0][0]) / 2 + "," + -(b[1][1] + b[0][1]) / 2 + ")";
+
+  g.transition().duration(750).attr("transform", transform);
+}
+
+function reset() {
+  g.selectAll(".active").classed("active", active = false);
+  g.transition().duration(750).attr("transform", "");
+}
+
+//TODO draw BarCharts nb accidents by arrondissement
+var values = {};
+var nbAccident = [];
+
+d3.csv("dataForD3js.csv", function(arrondissement) {
+  arrondissement.forEach(function(d) {
+    values[d.nb_accident] = d.arrondissement;
+    nbAccident.push(d.nb_accident);
+  });
+
+//DRAW
+var margin = {top: 40, right: 40, bottom: 40, left: 100},
+    width = 960,
+    height = 500;
+
+var x = d3.scale.linear()
+    .domain([0, d3.max(nbAccident)])
+    .range([0, width - margin.left - margin.right]);
+
+var y = d3.scale.ordinal()
+    .domain(d3.range(nbAccident.length))
+    .rangeRoundBands([height - margin.top - margin.bottom, 0], .2);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    .tickPadding(8);
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .tickSize(0)
+    .tickPadding(8);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("class", "bar chart")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Title SVG
+svg.append("text")
+    .attr("x", (width / 2))
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("text-decoration", "underline")
+    .text("Nombres d'accidents par arrondissement");
+
+svg.selectAll(".bar")
+    .data(nbAccident)
+  .enter().append("rect")
+    .attr("class", "barGreen")
+    .attr("y", function(d, i) { return y(i); })
+    .attr("width", x)
+    .attr("height", y.rangeBand());
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + y.rangeExtent()[1] + ")")
+    .call(xAxis);
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis)
+  .selectAll("text")
+    .text(function(d) { return "Arrondissement " + (d+1); });
+
+});
+
+</script>
