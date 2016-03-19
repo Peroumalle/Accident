@@ -121,11 +121,11 @@ fig = plt.figure()
 ax = fig.gca()
 
 #les camemberts
-ax.pie(sizes, explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=labels, colors=colors,
+ax.pie(sizes, explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=['','','','','','','',''], colors=colors,
        autopct='', shadow=True, startangle=90,
        radius=0.40, center=(0, 0), frame=True)
 
-ax.pie(np.random.random(8), explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=['','','','','','','',''], colors=colors,
+ax.pie(np.random.random(8), explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=labels, colors=colors,
        autopct='', shadow=True, startangle=90,
        radius=0.40, center=(1, 1), frame=True)
 
