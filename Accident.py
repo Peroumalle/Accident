@@ -3,6 +3,9 @@
 CASE I
 '''
 import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+import numpy as np
 
 df = pd.read_csv("accidentologie.csv",sep=';')
 #remplit les colonnes vides ('nan') avec des chaines vides
@@ -78,3 +81,33 @@ print dfStat
 #si vous voulez un csv
 csvname ="dataArrondissementForD3js.csv"
 dfStat.to_csv(csvname,index=False)
+
+'''
+
+CASE IV
+'''
+
+labels ='Cyclo', 'VU', 'Bicy', 'Bus', 'Moto', 'Poids_lourd', 'VL', 'Scoot'
+
+#la somme de chaque accident par type et le total
+totalCyclo = dfStat['Cyclo'].sum(axis=0)
+totalVU = dfStat['VU'].sum(axis=0)
+totalBicy = dfStat['Bicy'].sum(axis=0)
+totalBus = dfStat['Bus'].sum(axis=0)
+totalMoto = dfStat['Moto'].sum(axis=0)
+totalPL = dfStat['Poids_lourd'].sum(axis=0)
+totalVL = dfStat['VL'].sum(axis=0)
+totalScoot = dfStat['Scoot'].sum(axis=0)
+total = totalCyclo + totalVU + totalBicy + totalBus + totalMoto + totalPL + totalVL + totalScoot
+
+#la taille en pourcentage
+sizes = [totalVU/total, totalBicy/total, totalBus/total, totalMoto/total, totalMoto/total, totalPL/total, totalVL/total, totalScoot/total]
+
+#couleurs pour chaque part
+colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral', 'red', 'orange', 'purple', 'green']
+#le split
+explode = (0, 0, 0, 0, 0, 0, 0.1, 0)
+
+plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+plt.axis('equal')
