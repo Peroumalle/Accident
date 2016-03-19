@@ -111,3 +111,40 @@ explode = (0, 0, 0, 0, 0, 0, 0.1, 0)
 plt.pie(sizes, explode=explode, labels=labels, colors=colors,
         autopct='%1.1f%%', shadow=True, startangle=90)
 plt.axis('equal')
+
+'''
+
+CASE V
+'''
+
+fig = plt.figure()
+ax = fig.gca()
+
+#les camemberts
+ax.pie(sizes, explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=labels, colors=colors,
+       autopct='', shadow=True, startangle=90,
+       radius=0.40, center=(0, 0), frame=True)
+
+ax.pie(np.random.random(8), explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=['','','','','','','',''], colors=colors,
+       autopct='', shadow=True, startangle=90,
+       radius=0.40, center=(1, 1), frame=True)
+
+ax.pie(np.random.random(8), explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=['','','','','','','',''], colors=colors,
+       autopct='', shadow=True, startangle=90,
+       radius=0.40, center=(0, 1), frame=True)
+
+ax.pie(np.random.random(8), explode=(0, 0, 0, 0, 0, 0, 0, 0), labels=['','','','','','','',''], colors=colors,
+       autopct='', shadow=True, startangle=90,
+       radius=0.40, center=(1, 0), frame=True)
+
+ax.set_xticks([0, 1])
+ax.set_yticks([0, 1])
+ax.set_xticklabels(["2012", "2013"])
+ax.set_yticklabels(["Paris", "La Ferté-Gaucher"])
+ax.set_xlim((-0.5, 1.5))
+ax.set_ylim((-0.5, 1.5))
+
+#Set aspect ratio
+ax.set_aspect('equal')
+
+plt.show()
