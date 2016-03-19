@@ -47,7 +47,7 @@ var svg = d3.select("body").append("svg")
     .attr("height", height);
 
 // echelle de couleur aussi facile
-var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,2000])
+var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,1500])
 
 
 var projection = d3.geo.azimuthalEqualArea()
@@ -94,6 +94,19 @@ var Data = [];
     .attr("d", path)
     .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.nb_accident) : "#ddd"})
     .on("mouseover",function(d){console.log(d)});
+
+    Data = data
+
+  // ajout du title et des labels
+  dep.append("title").html(function(d){return d.properties.choms ? d.properties.choms.nb_accident + "ème" + "%" : d.properties.Name})
+  
+  var labels = svg.selectAll("text").data(data)
+  labels.enter().append("text")
+    .attr("x",function(d){var p = projection([+d.Longitude,+d.Latitude]); return p[0]})
+    .attr("y",function(d){var p = projection([+d.Longitude,+d.Latitude]); return p[1]})
+    .html(function(d){return d.arrondissement})
+    .style("text")
+  
 });
 d3.select(self.frameElement).style("height", height + "px");
 </script>
