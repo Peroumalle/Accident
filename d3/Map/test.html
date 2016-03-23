@@ -56,9 +56,9 @@ var projection = d3.geo.azimuthalEqualArea()
   .rotate([-2.340087890624995, -48.858643406835796, 0])
   .translate([width / 2, height / 2])
   .precision(0.1)
-  
-var ratioY = 780/280000
-var ratioX = 400/280000
+
+console.log(projection([+2.3264,+48.8331]));
+console.log(projection([+2.3003,+48.8412]));
 
 // load path
 var path = d3.geo.path()
@@ -69,10 +69,26 @@ var key = function(obj){
   return obj.totallyUniqueEmployeeIdKey;
 };
 
-var dict = {};
-var coord = {"Latitude" : "48.825428","Longitude" : "2.301464"}
-dict[1] = coord;
-console.log(dict[1])
+var coord = [{"Latitude" : "48.8592","Longitude" : "2.3417"},
+{"Latitude" : "48.8655","Longitude" : "2.3426"},
+{"Latitude" : "48.8637","Longitude" : "2.3615"},
+{"Latitude" : "48.8601","Longitude" : "2.3507"},
+{"Latitude" : "48.8448","Longitude" : "2.3471"},
+{"Latitude" : "48.8493","Longitude" : "2.33"},
+{"Latitude" : "48.8565","Longitude" : "2.321"},
+{"Latitude" : "48.8763","Longitude" : "2.3183"},
+{"Latitude" : "48.8718","Longitude" : "2.3399"},
+{"Latitude" : "48.8709","Longitude" : "2.3561"},
+{"Latitude" : "48.8574","Longitude" : "2.3795"},
+{"Latitude" : "48.8412","Longitude" : "2.3876"},
+{"Latitude" : "48.8322","Longitude" : "2.3561"},
+{"Latitude" : "48.8331","Longitude" : "2.3264"},
+{"Latitude" : "48.8412","Longitude" : "2.3003"},
+{"Latitude" : "48.8637","Longitude" : "2.2769"},
+{"Latitude" : "48.8835","Longitude" : "2.3219"},
+{"Latitude" : "48.8925","Longitude" : "2.3444"},
+{"Latitude" : "48.8817","Longitude" : "2.3822"},
+{"Latitude" : "48.8646","Longitude" : "2.3984"}];
 
 var Data = [];
 
@@ -90,7 +106,7 @@ var Data = [];
     features.features.forEach(function(c){
 		var obj3 = {};
 		var obj2 = dlookup[c.properties.Name];
-		var obj1 = dict[1]
+		var obj1 = coord[(c.properties.Name)-1]
 	    for (var attrname in obj2 ) { obj3[attrname] = obj2[attrname]; }
 	    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
           c.properties.choms = obj3;
@@ -112,11 +128,11 @@ var Data = [];
   // ajout du title et des labels
   dep.append("title").html(function(d){return d.properties.choms ? d.properties.choms.nb_accident : d.properties.Name})
   
-  var labels = svg.selectAll("text").data(data)
+  var labels = svg.selectAll("text").data(features.features)
   labels.enter().append("text")
-    .attr("x",function(d){var p = projection([+48.825428,+2.301464]); console.log(p[0]*ratioX); return p[0]*ratioX})
-    .attr("y",function(d){var p = projection([+48.825428,+2.301464]); console.log(p[1]*ratioY); return p[1]*ratioY})
-    .html(function(d){return d.nb_accident})
+    .attr("x",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[0]})
+    .attr("y",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[1]})
+    .html(function(d){return d.properties.choms.nb_accident})
     .style("text")
   
 });
