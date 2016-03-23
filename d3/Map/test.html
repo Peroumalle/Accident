@@ -36,6 +36,12 @@ svg {
 
 </style>
 <body>
+<h1>Accidents sur Paris</h1>
+<h4>(Source data.gouv.fr)</h4>
+<input type="radio" name="annee"  onchange="update('Scoot')">Scoot
+<input type="radio" name="annee"  onchange="update('Moto')">Moto
+<input type="radio" name="annee"  onchange="update('nb_accident')">Nombre accidents
+<input type="radio" name="annee"  onchange="update('Cyclo')" checked>Cylo<br>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
 <script src="./queue.v1.min.js"></script>
 <script>
@@ -126,7 +132,7 @@ var Data = [];
 	Data = data
 
   // ajout du title et des labels
-  dep.append("title").html(function(d){return d.properties.choms ? d.properties.choms.nb_accident : d.properties.Name})
+  dep.append("title").html(function(d){return "Arrondissement : "+d.properties.Name})
   
   var labels = svg.selectAll("text").data(features.features)
   labels.enter().append("text")
@@ -137,5 +143,33 @@ var Data = [];
   
 });
 d3.select(self.frameElement).style("height", height + "px");
+
+var update = function(feature){
+	var a = 0;
+	var newscale = scalecolor;
+	switch (feature)
+	{
+		case "nb_accident":
+			a=1500;
+			break;
+		case "Scoot":
+			a=300;
+			break;
+		case "Moto":
+			a=200;
+			break;
+		case "Cyclo":
+			a=80;
+			break;
+	}
+	newscale.domain([0,a])
+	var dep = svg.selectAll("path")
+	dep.transition().duration(2000).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return newscale(d.properties.choms[feature]) }else{return "#ddd"}})
+	
+	svg.selectAll("text").html(function(d){return d.properties.choms[feature]})
+	
+}
+
 </script>
 </body>
