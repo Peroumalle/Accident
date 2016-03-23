@@ -36,6 +36,17 @@ svg {
 
 </style>
 <body>
+<h1>Accidents sur Paris</h1>
+<h4>(Source data.gouv.fr)</h4>
+<input type="radio" name="annee"  onchange="update('nb_accident')" checked>Accidents total
+<input type="radio" name="annee"  onchange="update('Bicy')">Bicy
+<input type="radio" name="annee"  onchange="update('Bus')">Bus
+<input type="radio" name="annee"  onchange="update('Cyclo')">Cyclo
+<input type="radio" name="annee"  onchange="update('Moto')">Moto
+<input type="radio" name="annee"  onchange="update('Poids_lourd')">Poids lourd
+<input type="radio" name="annee"  onchange="update('Scoot')">Scoot
+<input type="radio" name="annee"  onchange="update('VL')">Véhicule léger
+<input type="radio" name="annee"  onchange="update('VU')">Véhicule utilitaire<br>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
 <script src="./queue.v1.min.js"></script>
 <script>
@@ -69,15 +80,15 @@ var key = function(obj){
   return obj.totallyUniqueEmployeeIdKey;
 };
 
-var coord = [{"Latitude" : "48.8592","Longitude" : "2.3417"},
+var coord = [{"Latitude" : "48.8592","Longitude" : "2.3400"},
 {"Latitude" : "48.8655","Longitude" : "2.3426"},
-{"Latitude" : "48.8637","Longitude" : "2.3615"},
-{"Latitude" : "48.8601","Longitude" : "2.3507"},
+{"Latitude" : "48.8637","Longitude" : "2.3550"},
+{"Latitude" : "48.8550","Longitude" : "2.3507"},
 {"Latitude" : "48.8448","Longitude" : "2.3471"},
 {"Latitude" : "48.8493","Longitude" : "2.33"},
-{"Latitude" : "48.8565","Longitude" : "2.321"},
+{"Latitude" : "48.8565","Longitude" : "2.315"},
 {"Latitude" : "48.8763","Longitude" : "2.3183"},
-{"Latitude" : "48.8718","Longitude" : "2.3399"},
+{"Latitude" : "48.8750","Longitude" : "2.3399"},
 {"Latitude" : "48.8709","Longitude" : "2.3561"},
 {"Latitude" : "48.8574","Longitude" : "2.3795"},
 {"Latitude" : "48.8412","Longitude" : "2.3876"},
@@ -85,7 +96,7 @@ var coord = [{"Latitude" : "48.8592","Longitude" : "2.3417"},
 {"Latitude" : "48.8331","Longitude" : "2.3264"},
 {"Latitude" : "48.8412","Longitude" : "2.3003"},
 {"Latitude" : "48.8637","Longitude" : "2.2769"},
-{"Latitude" : "48.8835","Longitude" : "2.3219"},
+{"Latitude" : "48.8835","Longitude" : "2.3100"},
 {"Latitude" : "48.8925","Longitude" : "2.3444"},
 {"Latitude" : "48.8817","Longitude" : "2.3822"},
 {"Latitude" : "48.8646","Longitude" : "2.3984"}];
@@ -94,7 +105,7 @@ var Data = [];
 
     queue()
       .defer(d3.json, './paris.json') // topojson polygons
-      .defer(d3.csv, './dataArrondissementForD3js.csv') // geojson points
+      .defer(d3.csv, './AccidentDetail.csv') // geojson points
       .await(function(error,features,data) {
 
 	  // Création d'une table en prennant d.arrondissement comme key
@@ -126,7 +137,7 @@ var Data = [];
 	Data = data
 
   // ajout du title et des labels
-  dep.append("title").html(function(d){return d.properties.choms ? d.properties.choms.nb_accident : d.properties.Name})
+  dep.append("title").html(function(d){return "Arrondissement : "+d.properties.Name})
   
   var labels = svg.selectAll("text").data(features.features)
   labels.enter().append("text")
@@ -137,5 +148,48 @@ var Data = [];
   
 });
 d3.select(self.frameElement).style("height", height + "px");
+
+var update = function(feature){
+	var a = 0;
+	var newscale = scalecolor;
+	switch (feature)
+	{
+		case "nb_accident":
+			a=1500;
+			break;
+		case "Bicy":
+			a=80;
+			break;
+		case "Bus":
+			a=30;
+			break;
+		case "Cyclo":
+			a=70;
+			break;
+		case "Moto":
+			a=200;
+			break;
+		case "Poids_lourd":
+			a=30;
+			break;
+		case "Scoot":
+			a=300;
+			break;
+		case "VL":
+			a=1000;
+			break;
+		case "VU":
+			a=100;
+			break;
+	}
+	newscale.domain([0,a])
+	var dep = svg.selectAll("path")
+	dep.transition().duration(1000).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return newscale(d.properties.choms[feature]) }else{return "#ddd"}})
+	
+	svg.selectAll("text").html(function(d){return d.properties.choms[feature]})
+	
+}
+
 </script>
 </body>

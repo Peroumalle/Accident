@@ -40,17 +40,7 @@ svg {
 </style>
 <body>
 <h1>Accidents sur Paris : heure ( <span id="heure">23</span>h )</h1>
-<span id="thetype" style="display:none"></span>
 <h4>(Source data.gouv.fr)</h4>
-<input type="radio" name="annee"  onchange="updateType('nb_accident')" checked>Accidents total
-<input type="radio" name="annee"  onchange="updateType('Bicy')">Bicy
-<input type="radio" name="annee"  onchange="updateType('Bus')">Bus
-<input type="radio" name="annee"  onchange="updateType('Cyclo')">Cyclo
-<input type="radio" name="annee"  onchange="updateType('Moto')">Moto
-<input type="radio" name="annee"  onchange="updateType('Poids_lourd')">Poids lourd
-<input type="radio" name="annee"  onchange="updateType('Scoot')">Scoot
-<input type="radio" name="annee"  onchange="updateType('VL')">Véhicule léger
-<input type="radio" name="annee"  onchange="updateType('VU')">Véhicule utilitaire<br>
 <div id=slider></div>
 </div>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
@@ -175,60 +165,13 @@ var Data = [];
 d3.select(self.frameElement).style("height", height + "px");
 
 var update = function(feature){
-	var tempfeature = document.getElementById('thetype').textContent+feature
-	console.log(tempfeature)
 	var dep = svg.selectAll("path")
-	dep.transition().duration(2000).ease(d3.ease("quad"))
-		.style("fill",function(d){if(d.properties.choms && d.properties.choms[tempfeature]!=":"){return scalecolor(d.properties.choms[tempfeature]) }else{return "#ddd"}})
-	
-	svg.selectAll("text").html(function(d){return d.properties.choms[tempfeature]})
-	d3.select("#heure").html(feature)
-}
-var updateType = function(feature){
-	var dep = svg.selectAll("path")
-	console.log(feature)
-	switch(feature)
-	{
-		case "nb_accident":
-			d3.select("#thetype").html("")
-			scalecolor.domain([0,80])
-			break;
-		case "Bicy":
-			d3.select("#thetype").html("Bicy_")
-			scalecolor.domain([0,10])
-			break;
-		case "Bus":
-			d3.select("#thetype").html("Bus_")
-			scalecolor.domain([0,4])
-			break;
-		case "Cyclo":
-			d3.select("#thetype").html("Cyclo_")
-			scalecolor.domain([0,5])
-			break;
-		case "Moto":
-			d3.select("#thetype").html("Moto_")
-			scalecolor.domain([0,15])
-			break;
-		case "Poids_lourd":
-			d3.select("#thetype").html("Poids_lourd_")
-			scalecolor.domain([0,4])
-			break;
-		case "Scoot":
-			d3.select("#thetype").html("Scoot_")
-			scalecolor.domain([0,20])
-			break;
-		case "VL":
-			d3.select("#thetype").html("VL_")
-			scalecolor.domain([0,40])
-			break;
-		case "VU":
-			d3.select("#thetype").html("VU_")
-			scalecolor.domain([0,8])
-			break;
-	}
 	dep.transition().duration(2000).ease(d3.ease("quad"))
 		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return scalecolor(d.properties.choms[feature]) }else{return "#ddd"}})
 	
+	svg.selectAll("text").html(function(d){return d.properties.choms[feature]})
+	d3.select("#heure").html(feature)
 }
+
 </script>
 </body>
