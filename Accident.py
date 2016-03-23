@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 %matplotlib inline
 import numpy as np
 
+df2 = pd.read_csv("AccidentDetail.csv",sep=',')
+
+
 df = pd.read_csv("accidentologie.csv",sep=';')
 #remplit les colonnes vides ('nan') avec des chaines vides
 df = df.fillna('')
@@ -40,6 +43,13 @@ for col in  df.columns - ['lieu_1_nomv','lieu_2_nomv','date','carr','coordonnees
 CASE III
 '''
 
+#en commentaire parce que useless pour l'instant
+'''
+    for col in  df.columns - ['lieu_1_nomv','lieu_2_nomv','date','carr','coordonnees','adresse','code_postal','com','7541','heure']:
+    print col,' \n',set(df[col])
+    print '\n'
+    '''
+
 #scrapping nombre d'habitant par arondissement
 languages=range(1,21)
 dfHab=pd.DataFrame({'arondissement' : languages, 'habitant': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]})
@@ -58,7 +68,18 @@ for i in range(1,21) :
     dfHab["habitant"][int(i)-1] = int(value)
 
 print dfHab
-dfHab.plot(kind="bar",title="Nombre d'habitant par arrondissement")
+dfHab.plot('arondissement','habitant',kind="bar",title="Nombre d'habitant par arrondissement",color='green')
+
+heures=range(0,24)
+lh = []
+for h in heures:
+    lh.append(df2[str(h)].sum())
+dfHeure = pd.DataFrame({"heure" : heures, "accidents": lh})
+print dfHeure
+
+dfHeure.plot('heure', 'accidents')
+plt.xticks(np.arange(0, 24, 1.0))
+plt.show()
 
 #classement par code postal
 df.sort_values(['code_postal'])
