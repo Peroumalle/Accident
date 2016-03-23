@@ -41,6 +41,8 @@ var path = d3.geo.path().projection(projection)
 
 
 
+
+// save data
 var Data = []
 
 
@@ -78,8 +80,8 @@ queue()
   
   var labels = svg.selectAll("text").data(data)
   labels.enter().append("text")
-    .attr("x",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(p[0]); return p[0]})
-    .attr("y",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(p[1]); return p[1]})
+    .attr("x",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(d); return p[0]})
+    .attr("y",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(d); return p[1]})
     .html(function(d){return d.Country})
     .style("text")
   

@@ -60,10 +60,19 @@ var projection = d3.geo.azimuthalEqualArea()
 var ratioY = 780/280000
 var ratioX = 400/280000
 
-var pos = []
-
+// load path
 var path = d3.geo.path()
     .projection(projection);
+
+// Find key and add coord
+var key = function(obj){
+  return obj.totallyUniqueEmployeeIdKey;
+};
+
+var dict = {};
+var coord = {"Latitude" : "48.825428","Longitude" : "2.301464"}
+dict[1] = coord;
+console.log(dict[1])
 
 var Data = [];
 
@@ -79,8 +88,12 @@ var Data = [];
 	// stocker en matchant avec avec c.properties.Name
 	// Création d'une propriété choms
     features.features.forEach(function(c){
-          console.log(dlookup[c.properties.Name]);
-          c.properties.choms = dlookup[c.properties.Name];
+		var obj3 = {};
+		var obj2 = dlookup[c.properties.Name];
+		var obj1 = dict[1]
+	    for (var attrname in obj2 ) { obj3[attrname] = obj2[attrname]; }
+	    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+          c.properties.choms = obj3;
         }
       );
   console.log(features.features)
@@ -94,7 +107,7 @@ var Data = [];
     .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.nb_accident) : "#ddd"})
     .on("mouseover",function(d){console.log(d)});
 
-    Data = data
+	Data = data
 
   // ajout du title et des labels
   dep.append("title").html(function(d){return d.properties.choms ? d.properties.choms.nb_accident : d.properties.Name})
