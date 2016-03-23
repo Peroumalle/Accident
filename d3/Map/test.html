@@ -29,7 +29,7 @@ svg {
 }
 .feature {
   fill: #ccc;
-  stroke: #fff;
+  stroke: #f2f2f2;
   stroke-width: 2px;
 }
 
@@ -178,7 +178,7 @@ var update = function(feature){
 	var tempfeature = document.getElementById('thetype').textContent+feature
 	console.log(tempfeature)
 	var dep = svg.selectAll("path")
-	dep.transition().duration(2000).ease(d3.ease("quad"))
+	dep.transition().duration(150).ease(d3.ease("quad"))
 		.style("fill",function(d){if(d.properties.choms && d.properties.choms[tempfeature]!=":"){return scalecolor(d.properties.choms[tempfeature]) }else{return "#ddd"}})
 	
 	svg.selectAll("text").html(function(d){return d.properties.choms[tempfeature]})
@@ -226,7 +226,10 @@ var updateType = function(feature){
 			scalecolor.domain([0,8]).range(["#fff","#74476A"])
 			break;
 	}
-	
+	var value = document.getElementById('thetype').textContent+document.getElementById('heure').textContent
+	dep.transition().duration(150).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.choms && d.properties.choms[value]!=":"){return scalecolor(d.properties.choms[value]) }else{return "#ddd"}})
+	svg.selectAll("text").html(function(d){return d.properties.choms[value]})
 }
 </script>
 </body>
