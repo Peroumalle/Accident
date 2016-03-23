@@ -40,16 +40,25 @@ for col in  df.columns - ['lieu_1_nomv','lieu_2_nomv','date','carr','coordonnees
 CASE III
 '''
 
-#scrapping
+#scrapping nombre d'habitant par arondissement
+languages=range(1,21)
+dfHab=pd.DataFrame({'arondissement' : languages, 'habitant': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]})
+
 page = requests.get("http://www.insee.fr/fr/ppp/bases-de-donnees/recensement/populations-legales/departement.asp?dep=75").text
 doc  = html.fromstring(page)
-nbHabittant = []
 d = {}
-for i in range(1,20) :
+for i in range(1,21) :
     element = doc.xpath('//*[@id="col-centre"]/table[2]/tbody/tr['+str(i)+']/td[5]')[0]
-    nbHabittant.append((i,element.text_content()))
-    d[i] = element.text_content()
-    print("Arrondissement " + str(i) + ", " + element.text_content())
+    print("Arrondissement " + str(i) + ", " + element.text_content().replace(" ",""))
+    value = ""
+    for j in element.text_content():
+        if(j.isnumeric()):
+            value += j
+    d[i] = value
+    dfHab["habitant"][int(i)-1] = int(value)
+
+print dfHab
+dfHab.plot(kind="bar",title="Nombre d'habitant par arrondissement")
 
 #classement par code postal
 df.sort_values(['code_postal'])
