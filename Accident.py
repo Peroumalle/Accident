@@ -40,6 +40,17 @@ for col in  df.columns - ['lieu_1_nomv','lieu_2_nomv','date','carr','coordonnees
 CASE III
 '''
 
+#scrapping
+page = requests.get("http://www.insee.fr/fr/ppp/bases-de-donnees/recensement/populations-legales/departement.asp?dep=75").text
+doc  = html.fromstring(page)
+nbHabittant = []
+d = {}
+for i in range(1,20) :
+    element = doc.xpath('//*[@id="col-centre"]/table[2]/tbody/tr['+str(i)+']/td[5]')[0]
+    nbHabittant.append((i,element.text_content()))
+    d[i] = element.text_content()
+    print("Arrondissement " + str(i) + ", " + element.text_content())
+
 #classement par code postal
 df.sort_values(['code_postal'])
 
