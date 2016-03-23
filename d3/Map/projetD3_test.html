@@ -8,7 +8,10 @@ body {
 svg {
     background: white;
 }
-
+#slider
+{
+	margin: 15px;
+}
 .region {
   stroke: white;
   stroke-width: 2px;
@@ -26,7 +29,7 @@ svg {
 }
 .feature {
   fill: #ccc;
-  stroke: #fff;
+  stroke: #f2f2f2;
   stroke-width: 2px;
 }
 
@@ -36,20 +39,32 @@ svg {
 
 </style>
 <body>
-<h1>Accidents sur Paris</h1>
+<h1>Accidents sur Paris : heure ( <span id="heure">23</span>h )</h1>
 <h4>(Source data.gouv.fr)</h4>
-<input type="radio" name="annee"  onchange="update('nb_accident')" checked>Accidents total
-<input type="radio" name="annee"  onchange="update('Bicy')">Bicy
-<input type="radio" name="annee"  onchange="update('Bus')">Bus
-<input type="radio" name="annee"  onchange="update('Cyclo')">Cyclo
-<input type="radio" name="annee"  onchange="update('Moto')">Moto
-<input type="radio" name="annee"  onchange="update('Poids_lourd')">Poids lourd
-<input type="radio" name="annee"  onchange="update('Scoot')">Scoot
-<input type="radio" name="annee"  onchange="update('VL')">Véhicule léger
-<input type="radio" name="annee"  onchange="update('VU')">Véhicule utilitaire<br>
+<div id=slider></div>
+</div>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
 <script src="./queue.v1.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 <script>
+// definition du callback du slider
+var slide = function(event,ui){
+
+	// Valeur de l'event
+	console.log(ui.value)
+
+	// recuperation des noms de variables
+	var featuresnames= Object.keys(Data[0]).sort()
+
+	// mise a jour suivant la variables correspondant à la position du slider ui.value
+	update(ui.value)
+}
+
+// creation du slider ! attention un div avec l'id slider doit exister dans le html
+$("#slider").slider({min:0,max:23,step:1,value:23,slide:slide})
+
 var width = 800,
 height = 600;
 
@@ -58,7 +73,7 @@ var svg = d3.select("body").append("svg")
     .attr("height", height);
 
 // echelle de couleur aussi facile
-var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,1500])
+var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,70])
 
 
 var projection = d3.geo.azimuthalEqualArea()
@@ -131,7 +146,7 @@ var Data = [];
     .enter().append("path")
     .attr("class", "feature")
     .attr("d", path)
-    .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.nb_accident) : "#ddd"})
+    .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms[23]) : "#ddd"})
     .on("mouseover",function(d){console.log(d)});
 
 	Data = data
@@ -143,52 +158,19 @@ var Data = [];
   labels.enter().append("text")
     .attr("x",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[0]})
     .attr("y",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[1]})
-    .html(function(d){return d.properties.choms.nb_accident})
+    .html(function(d){return d.properties.choms[23]})
     .style("text")
   
 });
 d3.select(self.frameElement).style("height", height + "px");
 
 var update = function(feature){
-	var a = 0;
-	var newscale = scalecolor;
-	switch (feature)
-	{
-		case "nb_accident":
-			a=1500;
-			break;
-		case "Bicy":
-			a=80;
-			break;
-		case "Bus":
-			a=30;
-			break;
-		case "Cyclo":
-			a=70;
-			break;
-		case "Moto":
-			a=200;
-			break;
-		case "Poids_lourd":
-			a=30;
-			break;
-		case "Scoot":
-			a=300;
-			break;
-		case "VL":
-			a=1000;
-			break;
-		case "VU":
-			a=100;
-			break;
-	}
-	newscale.domain([0,a])
 	var dep = svg.selectAll("path")
-	dep.transition().duration(1000).ease(d3.ease("quad"))
-		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return newscale(d.properties.choms[feature]) }else{return "#ddd"}})
+	dep.transition().duration(150).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return scalecolor(d.properties.choms[feature]) }else{return "#ddd"}})
 	
 	svg.selectAll("text").html(function(d){return d.properties.choms[feature]})
-	
+	d3.select("#heure").html(feature)
 }
 
 </script>
