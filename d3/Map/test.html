@@ -51,9 +51,16 @@ var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,1500])
 
 
 var projection = d3.geo.azimuthalEqualArea()
-  .translate([width/2, height/2])
-  .center([16,50])
-  .scale([1000]);
+  .clipAngle(180 - 1e-3)
+  .scale(280000)
+  .rotate([-2.340087890624995, -48.858643406835796, 0])
+  .translate([width / 2, height / 2])
+  .precision(0.1)
+  
+var ratioY = 780/280000
+var ratioX = 400/280000
+
+var pos = []
 
 var path = d3.geo.path()
     .projection(projection);
@@ -78,23 +85,10 @@ var Data = [];
       );
   console.log(features.features)
 
-  // New projection pour être à la bonne échelle
-    projection
-      .scale(1)
-      .translate([0, 0]);
-
-      var b = path.bounds(features),
-  s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-  t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
-
-  projection
-  .scale(s)
-  .translate(t);
-
   // Dessins des arrondissements
   var dep = svg.selectAll("path")
     .data(features.features)
-    .enter().append("svg:path")
+    .enter().append("path")
     .attr("class", "feature")
     .attr("d", path)
     .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms.nb_accident) : "#ddd"})
@@ -107,8 +101,8 @@ var Data = [];
   
   var labels = svg.selectAll("text").data(data)
   labels.enter().append("text")
-    .attr("x",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(p[0]); return p[0]})
-    .attr("y",function(d){var p = projection([+d.Longitude,+d.Latitude]); console.log(p[1]); return p[1]})
+    .attr("x",function(d){var p = projection([+48.825428,+2.301464]); console.log(p[0]*ratioX); return p[0]*ratioX})
+    .attr("y",function(d){var p = projection([+48.825428,+2.301464]); console.log(p[1]*ratioY); return p[1]*ratioY})
     .html(function(d){return d.nb_accident})
     .style("text")
   
