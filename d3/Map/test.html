@@ -191,43 +191,41 @@ var updateType = function(feature){
 	{
 		case "nb_accident":
 			d3.select("#thetype").html("")
-			scalecolor.domain([0,80])
+			scalecolor.domain([0,80]).range(["#fff","#f22"])
 			break;
 		case "Bicy":
 			d3.select("#thetype").html("Bicy_")
-			scalecolor.domain([0,10])
+			scalecolor.domain([0,10]).range(["#fff","#C9FF00"])
 			break;
 		case "Bus":
 			d3.select("#thetype").html("Bus_")
-			scalecolor.domain([0,4])
+			scalecolor.domain([0,4]).range(["#fff","#002957"])
 			break;
 		case "Cyclo":
 			d3.select("#thetype").html("Cyclo_")
-			scalecolor.domain([0,5])
+			scalecolor.domain([0,5]).range(["#fff","#2096BA"])
 			break;
 		case "Moto":
 			d3.select("#thetype").html("Moto_")
-			scalecolor.domain([0,15])
+			scalecolor.domain([0,15]).range(["#fff","#2096BA"])
 			break;
 		case "Poids_lourd":
 			d3.select("#thetype").html("Poids_lourd_")
-			scalecolor.domain([0,4])
+			scalecolor.domain([0,4]).range(["#fff","#002957"])
 			break;
 		case "Scoot":
 			d3.select("#thetype").html("Scoot_")
-			scalecolor.domain([0,20])
+			scalecolor.domain([0,20]).range(["#fff","#2096BA"])
 			break;
 		case "VL":
 			d3.select("#thetype").html("VL_")
-			scalecolor.domain([0,40])
+			scalecolor.domain([0,40]).range(["#fff","#74476A"])
 			break;
 		case "VU":
 			d3.select("#thetype").html("VU_")
-			scalecolor.domain([0,8])
+			scalecolor.domain([0,8]).range(["#fff","#74476A"])
 			break;
 	}
-	dep.transition().duration(2000).ease(d3.ease("quad"))
-		.style("fill",function(d){if(d.properties.choms && d.properties.choms[feature]!=":"){return scalecolor(d.properties.choms[feature]) }else{return "#ddd"}})
 	
 }
 </script>
