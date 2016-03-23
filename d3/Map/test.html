@@ -38,10 +38,15 @@ svg {
 <body>
 <h1>Accidents sur Paris</h1>
 <h4>(Source data.gouv.fr)</h4>
-<input type="radio" name="annee"  onchange="update('Scoot')">Scoot
+<input type="radio" name="annee"  onchange="update('nb_accident')" checked>Accidents total
+<input type="radio" name="annee"  onchange="update('Bicy')">Bicy
+<input type="radio" name="annee"  onchange="update('Bus')">Bus
+<input type="radio" name="annee"  onchange="update('Cyclo')">Cyclo
 <input type="radio" name="annee"  onchange="update('Moto')">Moto
-<input type="radio" name="annee"  onchange="update('nb_accident')">Nombre accidents
-<input type="radio" name="annee"  onchange="update('Cyclo')" checked>Cylo<br>
+<input type="radio" name="annee"  onchange="update('Poids_lourd')">Poids lourd
+<input type="radio" name="annee"  onchange="update('Scoot')">Scoot
+<input type="radio" name="annee"  onchange="update('VL')">Véhicule léger
+<input type="radio" name="annee"  onchange="update('VU')">Véhicule utilitaire<br>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
 <script src="./queue.v1.min.js"></script>
 <script>
@@ -152,14 +157,29 @@ var update = function(feature){
 		case "nb_accident":
 			a=1500;
 			break;
-		case "Scoot":
-			a=300;
+		case "Bicy":
+			a=80;
+			break;
+		case "Bus":
+			a=30;
+			break;
+		case "Cyclo":
+			a=70;
 			break;
 		case "Moto":
 			a=200;
 			break;
-		case "Cyclo":
-			a=80;
+		case "Poids_lourd":
+			a=30;
+			break;
+		case "Scoot":
+			a=300;
+			break;
+		case "VL":
+			a=1000;
+			break;
+		case "VU":
+			a=100;
 			break;
 	}
 	newscale.domain([0,a])
