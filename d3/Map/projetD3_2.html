@@ -176,7 +176,6 @@ d3.select(self.frameElement).style("height", height + "px");
 
 var update = function(feature){
 	var tempfeature = document.getElementById('thetype').textContent+feature
-	console.log(tempfeature)
 	var dep = svg.selectAll("path")
 	dep.transition().duration(150).ease(d3.ease("quad"))
 		.style("fill",function(d){if(d.properties.choms && d.properties.choms[tempfeature]!=":"){return scalecolor(d.properties.choms[tempfeature]) }else{return "#ddd"}})
@@ -186,46 +185,54 @@ var update = function(feature){
 }
 var updateType = function(feature){
 	var dep = svg.selectAll("path")
-	console.log(feature)
+	var thehtml = ""
+	var a =80
+	var color="#f22"
 	switch(feature)
 	{
-		case "nb_accident":
-			d3.select("#thetype").html("")
-			scalecolor.domain([0,80]).range(["#fff","#f22"])
-			break;
 		case "Bicy":
-			d3.select("#thetype").html("Bicy_")
-			scalecolor.domain([0,10]).range(["#fff","#C9FF00"])
+			var thehtml = "Bicy_"
+			var a =10
+			var color="#C9FF00"
 			break;
 		case "Bus":
-			d3.select("#thetype").html("Bus_")
-			scalecolor.domain([0,4]).range(["#fff","#002957"])
+			var thehtml = "Bus_"
+			var a =6
+			var color="#002957"
 			break;
 		case "Cyclo":
-			d3.select("#thetype").html("Cyclo_")
-			scalecolor.domain([0,5]).range(["#fff","#2096BA"])
+			var thehtml = "Cyclo_"
+			var a =5
+			var color="#2096BA"
 			break;
 		case "Moto":
-			d3.select("#thetype").html("Moto_")
-			scalecolor.domain([0,15]).range(["#fff","#2096BA"])
+			var thehtml = "Moto_"
+			var a =15
+			var color="#2096BA"
 			break;
 		case "Poids_lourd":
-			d3.select("#thetype").html("Poids_lourd_")
-			scalecolor.domain([0,4]).range(["#fff","#002957"])
+			var thehtml = "Poids_lourd_"
+			var a =4
+			var color="#002957"
 			break;
 		case "Scoot":
-			d3.select("#thetype").html("Scoot_")
-			scalecolor.domain([0,20]).range(["#fff","#2096BA"])
+			var thehtml = "Scoot_"
+			var a =20
+			var color="#2096BA"
 			break;
 		case "VL":
-			d3.select("#thetype").html("VL_")
-			scalecolor.domain([0,50]).range(["#fff","#74476A"])
+			var thehtml = "VL_"
+			var a =50
+			var color="#74476A"
 			break;
 		case "VU":
-			d3.select("#thetype").html("VU_")
-			scalecolor.domain([0,8]).range(["#fff","#74476A"])
+			var thehtml = "VU_"
+			var a =8
+			var color="#74476A"
 			break;
 	}
+	d3.select("#thetype").html(thehtml)
+	scalecolor.domain([0,a]).range(["#fff",color])
 	var value = document.getElementById('thetype').textContent+document.getElementById('heure').textContent
 	dep.transition().duration(150).ease(d3.ease("quad"))
 		.style("fill",function(d){if(d.properties.choms && d.properties.choms[value]!=":"){return scalecolor(d.properties.choms[value]) }else{return "#ddd"}})
