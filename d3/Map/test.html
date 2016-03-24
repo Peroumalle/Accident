@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+svg {
+    background: white;
+}
+#slider
+{
+	margin: 15px;
+}
+.region {
+  stroke: white;
+  stroke-width: 2px;
+  fill: #EFEFEF;
+}
+.graticule {
+  fill: none;
+  stroke-width: 1px;
+  stroke: gray;
+  vector-effect: non-scaling-stroke;
+}
+
+.water {
+  fill: #BEDDF5;
+}
+.feature {
+  fill: #ccc;
+  stroke: #f2f2f2;
+  stroke-width: 2px;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+</style>
+<body>
+<h1>Accidents sur Paris : heure ( <span id="heure">23</span>h )</h1>
+<span id="thetype" style="display:none"></span>
+<h4>(Source data.gouv.fr)</h4>
+<input type="radio" name="annee"  onchange="updateType('nb_accident')" checked>Accidents total
+<input type="radio" name="annee"  onchange="updateType('Bicy')">Bicy
+<input type="radio" name="annee"  onchange="updateType('Bus')">Bus
+<input type="radio" name="annee"  onchange="updateType('Cyclo')">Cyclo
+<input type="radio" name="annee"  onchange="updateType('Moto')">Moto
+<input type="radio" name="annee"  onchange="updateType('Poids_lourd')">Poids lourd
+<input type="radio" name="annee"  onchange="updateType('Scoot')">Scoot
+<input type="radio" name="annee"  onchange="updateType('VL')">Véhicule léger
+<input type="radio" name="annee"  onchange="updateType('VU')">Véhicule utilitaire<br>
+<div id=slider></div>
+</div>
+<div id="parse" style="float:right"></div>
+<script src="./colorbrewer.v1.min.js" charset="utf-8"></script>
+<script src="./d3.v3.min.js" charset="utf-8"></script>
+<script src="./queue.v1.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<script>
+// definition du callback du slider
+var slide = function(event,ui){
+
+	// Valeur de l'event
+	console.log(ui.value)
+
+	// recuperation des noms de variables
+	var featuresnames= Object.keys(Data[0]).sort()
+
+	// mise a jour suivant la variables correspondant à la position du slider ui.value
+	update(ui.value)
+}
+
+// creation du slider ! attention un div avec l'id slider doit exister dans le html
+$("#slider").slider({min:0,max:23,step:1,value:23,slide:slide})
+
+var width = 800,
+height = 600;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// echelle de couleur aussi facile
+var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,70])
+console.log()
+
+
+// echelle de couleur pour légende
+var scalecolorLeg = d3.scale.quantize().range(colorbrewer.Reds[6]).domain([0,100])
+
+
+var projection = d3.geo.azimuthalEqualArea()
+  .clipAngle(180 - 1e-3)
+  .scale(280000)
+  .rotate([-2.340087890624995, -48.858643406835796, 0])
+  .translate([width / 2, height / 2])
+  .precision(0.1)
+
+console.log(projection([+2.3264,+48.8331]));
+console.log(projection([+2.3003,+48.8412]));
+
+// load path
+var path = d3.geo.path()
+    .projection(projection);
+
+// Stocke dans la clé l'id de l'employé
+var key = function(obj){
+  return obj.totallyUniqueEmployeeIdKey;
+};
+
+var coord = [{"Latitude" : "48.8592","Longitude" : "2.3400"},
+{"Latitude" : "48.8655","Longitude" : "2.3426"},
+{"Latitude" : "48.8637","Longitude" : "2.3550"},
+{"Latitude" : "48.8550","Longitude" : "2.3507"},
+{"Latitude" : "48.8448","Longitude" : "2.3471"},
+{"Latitude" : "48.8493","Longitude" : "2.33"},
+{"Latitude" : "48.8565","Longitude" : "2.315"},
+{"Latitude" : "48.8763","Longitude" : "2.3183"},
+{"Latitude" : "48.8750","Longitude" : "2.3399"},
+{"Latitude" : "48.8709","Longitude" : "2.3561"},
+{"Latitude" : "48.8574","Longitude" : "2.3795"},
+{"Latitude" : "48.8412","Longitude" : "2.3876"},
+{"Latitude" : "48.8322","Longitude" : "2.3561"},
+{"Latitude" : "48.8331","Longitude" : "2.3264"},
+{"Latitude" : "48.8412","Longitude" : "2.3003"},
+{"Latitude" : "48.8637","Longitude" : "2.2769"},
+{"Latitude" : "48.8835","Longitude" : "2.3100"},
+{"Latitude" : "48.8925","Longitude" : "2.3444"},
+{"Latitude" : "48.8817","Longitude" : "2.3822"},
+{"Latitude" : "48.8646","Longitude" : "2.3984"}];
+
+var Data = [];
+
+    queue()
+      .defer(d3.json, './paris.json') // topojson polygons
+      .defer(d3.csv, './AccidentDetail.csv') // geojson points
+      .await(function(error,features,data) {
+
+	  // Création d'une table en prennant d.arrondissement comme key
+  var dlookup= d3.nest().key(function(d){return d.arrondissement}).rollup(function(d){
+    return d[0]}).map(data)
+
+	// Ajout de l'objet accident avec les latitudes et longitudes ajoutées en brut.
+    features.features.forEach(function(c){
+		var obj3 = {};
+		var obj2 = dlookup[c.properties.Name];
+		var obj1 = coord[(c.properties.Name)-1]
+	    for (var attrname in obj2 ) { obj3[attrname] = obj2[attrname]; }
+	    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+          c.properties.acc = obj3;
+        }
+      );
+  console.log(features.features)
+
+  // Dessins des arrondissements
+  var dep = svg.selectAll("path")
+    .data(features.features)
+    .enter().append("path")
+    .attr("class", "feature")
+    .attr("d", path)
+    .style("fill",function(d){return d.properties.acc ? scalecolor(d.properties.acc[23]) : "#ddd"})
+    .on("mouseover",function(d){console.log(d)});
+
+	Data = data
+
+  // ajout du title et des labels
+  dep.append("title").html(function(d){return "Arrondissement : "+d.properties.Name})
+  
+  var labels = svg.selectAll("text").data(features.features)
+  labels.enter().append("text")
+    .attr("x",function(d){var p = projection([+d.properties.acc.Longitude,+d.properties.acc.Latitude]); return p[0]})
+    .attr("y",function(d){var p = projection([+d.properties.acc.Longitude,+d.properties.acc.Latitude]); return p[1]})
+    .html(function(d){return d.properties.acc[23]})
+    .style("text")
+  
+});
+// creation de la légende
+var cols = colorbrewer.Reds[6]
+var legend="<h4>Taux d'accidents</h4><ul>"
+for(i=0;i<cols.length;i++){
+ var bornes=scalecolorLeg.invertExtent(cols[i])
+ legend+="<li> <span style='color:"+cols[i]+";font-size:1.5em'>&#9632;</span> [" + d3.round(bornes[0],1)+"%, "+ d3.round(bornes[1],1)+"%]</li>"
+}
+legend+="</ul>"
+console.log(legend)
+
+// ajout de la légende
+d3.select("#parse").append("div").attr("id","legend").html(legend)
+d3.select(self.frameElement).style("height", height + "px");
+
+var update = function(feature){
+	var tempfeature = document.getElementById('thetype').textContent+feature
+	var dep = svg.selectAll("path")
+	dep.transition().duration(150).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.acc && d.properties.acc[tempfeature]!=":"){return scalecolor(d.properties.acc[tempfeature]) }else{return "#ddd"}})
+	
+	svg.selectAll("text").html(function(d){return d.properties.acc[tempfeature]})
+	d3.select("#heure").html(feature)
+}
+var updateType = function(feature){
+	var dep = svg.selectAll("path")
+	var thehtml = ""
+	var a =80
+	var color="#f22"
+	var cols = colorbrewer.Reds[6]
+	scalecolorLeg.range(colorbrewer.Reds[6])
+	switch(feature)
+	{
+		case "Bicy":
+			var thehtml = "Bicy_"
+			var a =10
+			var color="#006600"
+			scalecolorLeg.range(colorbrewer.Greens[6])
+			cols = colorbrewer.Greens[6]
+			break;
+		case "Bus":
+			var thehtml = "Bus_"
+			var a =6
+			var color="#002957"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
+			break;
+		case "Cyclo":
+			var thehtml = "Cyclo_"
+			var a =5
+			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
+			break;
+		case "Moto":
+			var thehtml = "Moto_"
+			var a =15
+			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
+			break;
+		case "Poids_lourd":
+			var thehtml = "Poids_lourd_"
+			var a =4
+			var color="#002957"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
+			break;
+		case "Scoot":
+			var thehtml = "Scoot_"
+			var a =20
+			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
+			break;
+		case "VL":
+			var thehtml = "VL_"
+			var a =50
+			var color="#74476A"
+			scalecolorLeg.range(colorbrewer.Purples[6])
+			cols = colorbrewer.Purples[6]
+			break;
+		case "VU":
+			var thehtml = "VU_"
+			var a =8
+			var color="#74476A"
+			scalecolorLeg.range(colorbrewer.Purples[6])
+			cols = colorbrewer.Purples[6]
+			break;
+	}
+	d3.select("#thetype").html(thehtml)
+	scalecolor.domain([0,a]).range(["#fff",color])
+	var value = document.getElementById('thetype').textContent+document.getElementById('heure').textContent
+	dep.transition().duration(150).ease(d3.ease("quad"))
+		.style("fill",function(d){if(d.properties.acc && d.properties.acc[value]!=":"){return scalecolor(d.properties.acc[value]) }else{return "#ddd"}})
+	svg.selectAll("text").html(function(d){return d.properties.acc[value]})
+
+	// Refresh legend
+	
+	var legend="<h4>Taux d'accidents</h4><ul>"
+	for(i=0;i<cols.length;i++){
+	 var bornes=scalecolorLeg.invertExtent(cols[i])
+	 legend+="<li> <span style='color:"+cols[i]+";font-size:1.5em'>&#9632;</span> [" + d3.round(bornes[0],1)+"%, "+ d3.round(bornes[1],1)+"%]</li>"
+	}
+	legend+="</ul>"
+
+	// ajout de la légende
+	d3.select("#parse").html("")
+	d3.select("#parse").append("div").attr("id","legend").html(legend)
+	d3.select(self.frameElement).style("height", height + "px");
+	
+}
+</script>
+</body>

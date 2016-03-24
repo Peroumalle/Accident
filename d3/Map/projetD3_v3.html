@@ -41,7 +41,7 @@ svg {
 <body>
 <h1>Accidents sur Paris : heure ( <span id="heure">23</span>h )</h1>
 <span id="thetype" style="display:none"></span>
-<h4>(Source data.gouv.fr)</h4>
+<h4>(Source data.gouv.fr 2012-2013)</h4>
 <input type="radio" name="annee"  onchange="updateType('nb_accident')" checked>Accidents total
 <input type="radio" name="annee"  onchange="updateType('Bicy')">Bicy
 <input type="radio" name="annee"  onchange="updateType('Bus')">Bus
@@ -53,28 +53,25 @@ svg {
 <input type="radio" name="annee"  onchange="updateType('VU')">Véhicule utilitaire<br>
 <div id=slider></div>
 </div>
+<div id="parse" style="float:right"></div>
+<script src="./colorbrewer.v1.min.js" charset="utf-8"></script>
 <script src="./d3.v3.min.js" charset="utf-8"></script>
 <script src="./queue.v1.min.js"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
 <script src="//code.jquery.com/jquery-1.10.2.js"></script>
 <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 <script>
-// definition du callback du slider
+
+// Gestion de l'évènement quand on bouge la slide.
 var slide = function(event,ui){
-
-	// Valeur de l'event
-	console.log(ui.value)
-
-	// recuperation des noms de variables
 	var featuresnames= Object.keys(Data[0]).sort()
-
-	// mise a jour suivant la variables correspondant à la position du slider ui.value
 	update(ui.value)
 }
 
-// creation du slider ! attention un div avec l'id slider doit exister dans le html
+// Injection du slider
 $("#slider").slider({min:0,max:23,step:1,value:23,slide:slide})
 
+// Valeurs par défault
 var width = 800,
 height = 600;
 
@@ -82,8 +79,11 @@ var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-// echelle de couleur aussi facile
 var scalecolor = d3.scale.linear().range(["#fff","#f22"]).domain([0,70])
+console.log()
+
+// Pannel de couleur pour la légende sur 100 pour les pourcentages.
+var scalecolorLeg = d3.scale.quantize().range(colorbrewer.Reds[6]).domain([0,100])
 
 
 var projection = d3.geo.azimuthalEqualArea()
@@ -93,14 +93,10 @@ var projection = d3.geo.azimuthalEqualArea()
   .translate([width / 2, height / 2])
   .precision(0.1)
 
-console.log(projection([+2.3264,+48.8331]));
-console.log(projection([+2.3003,+48.8412]));
-
-// load path
+// Chargement du chemin de la projection
 var path = d3.geo.path()
     .projection(projection);
 
-// Find key and add coord
 var key = function(obj){
   return obj.totallyUniqueEmployeeIdKey;
 };
@@ -129,26 +125,24 @@ var coord = [{"Latitude" : "48.8592","Longitude" : "2.3400"},
 var Data = [];
 
     queue()
-      .defer(d3.json, './paris.json') // topojson polygons
-      .defer(d3.csv, './AccidentDetail.csv') // geojson points
+      .defer(d3.json, './paris.json') // Dessin des arrondissements de paris
+      .defer(d3.csv, './AccidentDetail.csv') // Données sur les accidents
       .await(function(error,features,data) {
 
-	  // Création d'une table en prennant d.arrondissement comme key
+	  // Création d'une table en prennant l'arrondissement comme clé
   var dlookup= d3.nest().key(function(d){return d.arrondissement}).rollup(function(d){
     return d[0]}).map(data)
 
-	// stocker en matchant avec avec c.properties.Name
-	// Création d'une propriété choms
+	// Création propriété accident avec les latitudes et longitudes ajoutées en brut.
     features.features.forEach(function(c){
 		var obj3 = {};
 		var obj2 = dlookup[c.properties.Name];
 		var obj1 = coord[(c.properties.Name)-1]
 	    for (var attrname in obj2 ) { obj3[attrname] = obj2[attrname]; }
 	    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
-          c.properties.choms = obj3;
+          c.properties.acc = obj3;
         }
       );
-  console.log(features.features)
 
   // Dessins des arrondissements
   var dep = svg.selectAll("path")
@@ -156,87 +150,135 @@ var Data = [];
     .enter().append("path")
     .attr("class", "feature")
     .attr("d", path)
-    .style("fill",function(d){return d.properties.choms ? scalecolor(d.properties.choms[23]) : "#ddd"})
+    .style("fill",function(d){return d.properties.acc ? scalecolor(d.properties.acc[23]) : "#ddd"})
     .on("mouseover",function(d){console.log(d)});
 
 	Data = data
 
-  // ajout du title et des labels
+  // Ajout en attribut title du numéro de l'arrondissement.
   dep.append("title").html(function(d){return "Arrondissement : "+d.properties.Name})
   
   var labels = svg.selectAll("text").data(features.features)
   labels.enter().append("text")
-    .attr("x",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[0]})
-    .attr("y",function(d){var p = projection([+d.properties.choms.Longitude,+d.properties.choms.Latitude]); return p[1]})
-    .html(function(d){return d.properties.choms[23]})
+    .attr("x",function(d){var p = projection([+d.properties.acc.Longitude,+d.properties.acc.Latitude]); return p[0]})
+    .attr("y",function(d){var p = projection([+d.properties.acc.Longitude,+d.properties.acc.Latitude]); return p[1]})
+    .html(function(d){return d.properties.acc[23]})
     .style("text")
   
 });
+
+// creation de la légende
+var cols = colorbrewer.Reds[6]
+var legend="<h4>Taux d'accidents</h4><ul>"
+for(i=0;i<cols.length;i++){
+ var bornes=scalecolorLeg.invertExtent(cols[i])
+ legend+="<li> <span style='color:"+cols[i]+";font-size:1.5em'>&#9632;</span> [" + d3.round(bornes[0],1)+"%, "+ d3.round(bornes[1],1)+"%]</li>"
+}
+legend+="</ul>"
+
+// ajout de la légende
+d3.select("#parse").append("div").attr("id","legend").html(legend)
 d3.select(self.frameElement).style("height", height + "px");
 
+// update lorsque l'on bouge la slide
 var update = function(feature){
 	var tempfeature = document.getElementById('thetype').textContent+feature
 	var dep = svg.selectAll("path")
 	dep.transition().duration(150).ease(d3.ease("quad"))
-		.style("fill",function(d){if(d.properties.choms && d.properties.choms[tempfeature]!=":"){return scalecolor(d.properties.choms[tempfeature]) }else{return "#ddd"}})
+		.style("fill",function(d){if(d.properties.acc && d.properties.acc[tempfeature]!=":"){return scalecolor(d.properties.acc[tempfeature]) }else{return "#ddd"}})
 	
-	svg.selectAll("text").html(function(d){return d.properties.choms[tempfeature]})
+	svg.selectAll("text").html(function(d){return d.properties.acc[tempfeature]})
 	d3.select("#heure").html(feature)
 }
+
+// Update lorsque l'on change de type
 var updateType = function(feature){
 	var dep = svg.selectAll("path")
 	var thehtml = ""
 	var a =80
 	var color="#f22"
-	switch(feature)
+	var cols = colorbrewer.Reds[6]
+	scalecolorLeg.range(colorbrewer.Reds[6])
+	switch(feature) // On gère ici les différents types.
 	{
 		case "Bicy":
 			var thehtml = "Bicy_"
 			var a =10
-			var color="#C9FF00"
+			var color="#006600"
+			scalecolorLeg.range(colorbrewer.Greens[6])
+			cols = colorbrewer.Greens[6]
 			break;
 		case "Bus":
 			var thehtml = "Bus_"
 			var a =6
 			var color="#002957"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
 			break;
 		case "Cyclo":
 			var thehtml = "Cyclo_"
 			var a =5
 			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
 			break;
 		case "Moto":
 			var thehtml = "Moto_"
 			var a =15
 			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
 			break;
 		case "Poids_lourd":
 			var thehtml = "Poids_lourd_"
 			var a =4
 			var color="#002957"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
 			break;
 		case "Scoot":
 			var thehtml = "Scoot_"
 			var a =20
 			var color="#2096BA"
+			scalecolorLeg.range(colorbrewer.Blues[6])
+			cols = colorbrewer.Blues[6]
 			break;
 		case "VL":
 			var thehtml = "VL_"
 			var a =50
 			var color="#74476A"
+			scalecolorLeg.range(colorbrewer.Purples[6])
+			cols = colorbrewer.Purples[6]
 			break;
 		case "VU":
 			var thehtml = "VU_"
 			var a =8
 			var color="#74476A"
+			scalecolorLeg.range(colorbrewer.Purples[6])
+			cols = colorbrewer.Purples[6]
 			break;
 	}
 	d3.select("#thetype").html(thehtml)
 	scalecolor.domain([0,a]).range(["#fff",color])
 	var value = document.getElementById('thetype').textContent+document.getElementById('heure').textContent
 	dep.transition().duration(150).ease(d3.ease("quad"))
-		.style("fill",function(d){if(d.properties.choms && d.properties.choms[value]!=":"){return scalecolor(d.properties.choms[value]) }else{return "#ddd"}})
-	svg.selectAll("text").html(function(d){return d.properties.choms[value]})
+		.style("fill",function(d){if(d.properties.acc && d.properties.acc[value]!=":"){return scalecolor(d.properties.acc[value]) }else{return "#ddd"}})
+	svg.selectAll("text").html(function(d){return d.properties.acc[value]})
+
+	// On créé ici le nouveau code de la légende
+	
+	var legend="<h4>Taux d'accidents</h4><ul>"
+	for(i=0;i<cols.length;i++){
+	 var bornes=scalecolorLeg.invertExtent(cols[i])
+	 legend+="<li> <span style='color:"+cols[i]+";font-size:1.5em'>&#9632;</span> [" + d3.round(bornes[0],1)+"%, "+ d3.round(bornes[1],1)+"%]</li>"
+	}
+	legend+="</ul>"
+
+	// On enlève l'ancienne légende et on ajoute le code
+	d3.select("#parse").html("")
+	d3.select("#parse").append("div").attr("id","legend").html(legend)
+	d3.select(self.frameElement).style("height", height + "px");
+	
 }
 </script>
 </body>
